@@ -15,9 +15,11 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 
+import com.bmhs.gametitle.game.assets.characters.PlayerCharacter;
 import com.bmhs.gametitle.game.utils.GameHandler;
 import com.bmhs.gametitle.game.assets.worlds.World;
 import com.bmhs.gametitle.gfx.assets.tiles.Tile;
+import com.bmhs.gametitle.gfx.utils.TileHandler;
 
 public class WorldGenTestScreen implements Screen {
 
@@ -31,6 +33,8 @@ public class WorldGenTestScreen implements Screen {
     private float effectiveViewportWidth, effectiveViewportHeight;
 
     private World world;
+
+    private PlayerCharacter player;
 
 
     public WorldGenTestScreen (final GameHandler game, final Screen parent) {
@@ -47,9 +51,12 @@ public class WorldGenTestScreen implements Screen {
         viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera);
         viewport.setScreenBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        world = new World(10, 30);
+        // change number of rows and columns to change the size of the world
+        world = new World(100, 300);
 
         camera.update();
+
+        player = new PlayerCharacter(TileHandler.getTileHandler().getWorldTileArray().get(2), 100, 200);
     }
 
     @Override
@@ -78,11 +85,13 @@ public class WorldGenTestScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
         game.batch.begin();
 
-            for (int r = 0; r < world.getWorldMapRows(); r++) {
-                for (int c = 0; c < world.getWorldMapColumns(); c++) {
-                    game.batch.draw(world.getWorldTileTextureRegion(r, c), c * Tile.ON_SCREEN_DEFAULT_WIDTH, r * Tile.ON_SCREEN_DEFAULT_HEIGHT);
-                }
+        for (int r = 0; r < world.getWorldMapRows(); r++) {
+            for (int c = 0; c < world.getWorldMapColumns(); c++) {
+                game.batch.draw(world.getWorldTileTextureRegion(r, c), c * Tile.ON_SCREEN_DEFAULT_WIDTH, r * Tile.ON_SCREEN_DEFAULT_HEIGHT);
             }
+        }
+
+        game.batch.draw(player.getTile().getTexture(), player.getX(), player.getY());
 
 
         game.batch.end();
@@ -140,9 +149,27 @@ public class WorldGenTestScreen implements Screen {
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             game.setScreen(parent);
         }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            player.adjustY(10);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            player.adjustX(-10);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            player.adjustY(-10);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            player.adjustX(10);
+        }
     }
 
     private void setCameraLimits() {
+        camera.position.set(player.getX(), player.getY(), 0);
+
         camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, ((float)world.getWorldMapRows()*(float)Tile.ON_SCREEN_DEFAULT_HEIGHT/(float)Gdx.graphics.getHeight()));
 
         // world.getWorldMapRows()*Tile.ON_SCREEN_DEFAULT_HEIGHT)/Gdx.graphics.getHeight()
